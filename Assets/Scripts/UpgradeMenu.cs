@@ -14,6 +14,20 @@ public class UpgradeMenu : MonoBehaviour
 
     [SerializeField]
     private float healthMultiplier = 1.3f;
+    private int upgradeCost = 50;
+
+    string pressedButtonSound = "ButtonPress";
+
+    Bardo.AudioManager audioManager;
+
+    private void Start()
+    {
+        audioManager = Bardo.AudioManager.instance;
+        if (audioManager == null)
+        {
+            Debug.LogError("No AudioManager found");
+        }
+    }
 
     private void OnEnable() {
         stats = PlayerStats.instance;
@@ -25,13 +39,29 @@ public class UpgradeMenu : MonoBehaviour
     }
 
     public void UpgradeHealth(){
+        if (GameMaster.Money < 0)
+        {
+            audioManager.PlaySound("No Money");
+            return;
+        }
+        audioManager.PlaySound(pressedButtonSound);
         stats.maxHealth =(int)(stats.maxHealth * healthMultiplier);
+        GameMaster.Money -= upgradeCost;
         Debug.Log("Upgrading to " + stats.maxHealth.ToString());
+        audioManager.PlaySound("Money");
         UpdateValues();
     }
     public void UpgradeSpeed(){
+        if (GameMaster.Money < upgradeCost)
+        {
+            audioManager.PlaySound("No Money");
+            return;
+        }
+        audioManager.PlaySound(pressedButtonSound);
         stats.movementSpeed =(int)(stats.movementSpeed * healthMultiplier);
+        GameMaster.Money -= upgradeCost;
         Debug.Log("Upgrading to " + stats.movementSpeed.ToString());
+        audioManager.PlaySound("Money");
         UpdateValues();
     }
 }
