@@ -6,24 +6,6 @@ using UnityStandardAssets._2D;
 [RequireComponent(typeof(Platformer2DUserControl))]
 public class Player : MonoBehaviour
 {
-    [System.Serializable]
-    public class PlayerStats {
-        public int maxHealth = 100;
-
-        private int _currentHealth;
-        public int currentHealth
-        {
-            get { return _currentHealth; }
-            set { _currentHealth = Mathf.Clamp(value, 0, maxHealth); }
-        }
-
-        public void Init()
-        {
-            currentHealth = maxHealth;
-        }
-    }
-
-    public PlayerStats stats = new PlayerStats();
     public int fallBoundary = -20;
 
     public string deathSoundName = "DeathVoice";
@@ -35,9 +17,12 @@ public class Player : MonoBehaviour
     [SerializeField]
     private StatusIndicator statusIndicator;
 
+    private PlayerStats stats;
+
     private void Start()
     {
-        stats.Init();
+        stats = PlayerStats.instance;
+        stats.currentHealth = stats.maxHealth;
         if (statusIndicator == null)
         {
             Debug.LogError("Missing status indicator object reference");
@@ -47,13 +32,15 @@ public class Player : MonoBehaviour
             statusIndicator.SetHealth(stats.currentHealth, stats.maxHealth);
 
         }
+        GameMaster.gm.onToggleUpgradeMenu += OnUpgradeMenuToggle;
+
          audioManager = Bardo.AudioManager.instance;
         if (audioManager == null)
         {
             Debug.LogError("No AudioManager found");
         }
 
-        GameMaster.gm.onToggleUpgradeMenu += OnUpgradeMenuToggle;
+        InvokeRepeating("RegenHealth", 1f/stats.healthRegenRate, 1f/stats.healthRegenRate);
     }
 
     void Update(){
@@ -87,5 +74,10 @@ public class Player : MonoBehaviour
     }
     private void OnDestroy() {
         GameMaster.gm.onToggleUpgradeMenu -= OnUpgradeMenuToggle;
+    }
+
+    private void RegenHealth(){
+        stats.currentHealth += 1;
+        statusIndicator.SetHealth(stats.currentHealth, stats.maxHealth);
     }
 }
